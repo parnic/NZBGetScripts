@@ -159,10 +159,14 @@ def lreplace(pattern, sub, string):
 #                           properties or due to errors during par-check;
 #                       1 = unpack failed;
 #                       2 = unpack successful.
-parSuccess = os.environ['NZBPP_PARSTATUS'] == '0' or os.environ['NZBPP_PARSTATUS'] == '2'
-unpackSuccess = os.environ['NZBPP_UNPACKSTATUS'] == '2'
+if 'NZBPP_TOTALSTATUS' in os.environ:
+	downloadSuccess = os.environ['NZBPP_TOTALSTATUS'] == 'SUCCESS'
+else:
+	parSuccess = os.environ['NZBPP_PARSTATUS'] == '0' or os.environ['NZBPP_PARSTATUS'] == '2'
+	unpackSuccess = os.environ['NZBPP_UNPACKSTATUS'] == '2'
+	downloadSuccess = parSuccess and unpackSuccess
 
-if parSuccess and unpackSuccess:
+if downloadSuccess:
         if updateType == 'full':
                 updateDir = ""
         elif localRoot and remotePath:
