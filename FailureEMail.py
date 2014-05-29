@@ -121,7 +121,15 @@ for	optname in required_options:
 # Check par and unpack status for errors.
 success=False
 report=False
-if os.environ['NZBPP_PARSTATUS'] == '1' or os.environ['NZBPP_UNPACKSTATUS'] == '1':
+if 'NZBPP_TOTALSTATUS' in os.environ:
+	if os.environ['NZBPP_TOTALSTATUS'] == 'SUCCESS':
+		subject = 'Success for "%s"' % (os.environ['NZBPP_NZBNAME'])
+		text = 'Download of "%s" has successfully completed.' % (os.environ['NZBPP_NZBNAME'])
+		success=True
+	else:
+		subject = 'Failure for "%s"' % (os.environ['NZBPP_NZBNAME'])
+		text = 'Download of "%s" has failed.' % (os.environ['NZBPP_NZBNAME'])
+elif os.environ['NZBPP_PARSTATUS'] == '1' or os.environ['NZBPP_UNPACKSTATUS'] == '1':
 	subject = 'Failure for "%s"' % (os.environ['NZBPP_NZBNAME'])
 	text = 'Download of "%s" has failed.' % (os.environ['NZBPP_NZBNAME'])
 elif os.environ['NZBPP_PARSTATUS'] == '4':
@@ -142,7 +150,10 @@ else:
 parStatus = { '0': 'skipped', '1': 'failed', '2': 'repaired', '3': 'repairable', '4': 'manual' }
 text += '\nPar-Status: %s' % parStatus[os.environ['NZBPP_PARSTATUS']]
 if os.environ['NZBPO_REPORTPARFAILURE'] == 'yes':
-	report = report or os.environ['NZBPP_PARSTATUS'] == '1' or os.environ['NZBPP_PARSTATUS'] == '3' or os.environ['NZBPP_PARSTATUS'] == '4'
+	if 'NZBPP_STATUS' in os.environ:
+		report = report or os.environ['NZBPP_STATUS'] == 'FAILURE/PAR' or os.environ['NZBPP_STATUS'] == 'WARNING/REPAIRABLE'
+	else:
+		report = report or os.environ['NZBPP_PARSTATUS'] == '1' or os.environ['NZBPP_PARSTATUS'] == '3' or os.environ['NZBPP_PARSTATUS'] == '4'
 
 #  NZBPP_UNPACKSTATUS - result of unpack:
 #                       0 = unpack is disabled or was skipped due to nzb-file
@@ -152,9 +163,15 @@ if os.environ['NZBPO_REPORTPARFAILURE'] == 'yes':
 unpackStatus = { '0': 'skipped', '1': 'failed', '2': 'success' }
 text += '\nUnpack-Status: %s' % unpackStatus[os.environ['NZBPP_UNPACKSTATUS']]
 if os.environ['NZBPO_REPORTUNPACKSKIPPED'] == 'yes':
-	report = report or os.environ['NZBPP_UNPACKSTATUS'] == '0'
+	if 'NZBPP_STATUS' in os.environ:
+		report = report or os.environ['NZBPP_STATUS'] == 'FAILURE/HEALTH' or os.environ['NZBPP_STATUS'] == 'WARNING/SPACE' or os.environ['NZBPP_STATUS'] == 'WARNING/PASSWORD'
+	else:
+		report = report or os.environ['NZBPP_UNPACKSTATUS'] == '0'
 if os.environ['NZBPO_REPORTUNPACKFAILURE'] == 'yes':
-	report = report or os.environ['NZBPP_UNPACKSTATUS'] == '1'
+	if 'NZBPP_STATUS' in os.environ:
+		report = report or os.environ['NZBPP_STATUS'] == 'FAILURE/UNPACK'
+	else:
+		report = report or os.environ['NZBPP_UNPACKSTATUS'] == '1'
 
 if report:
 	# add list of downloaded files
